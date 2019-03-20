@@ -1,0 +1,34 @@
+{
+  "custom": {
+  },
+  "info": {
+    "name": "piFinder_service",
+    "version": "1.0.0",
+    "author": "afterloe[lm6289511@gmai.com]",
+    "homePage": "https://github.com/afterloe",
+    "remarks": "树莓派设备数据搬运"
+  },
+  "server": {
+    "multiCore": {
+      "enable": true,
+      "num": 0
+    },
+    "daemon": {
+      "addr": "0.0.0.0",
+      "port": "8080"
+    }
+  },
+  "dependencies": {
+    "github.com/gin-gonic/gin": "laster",
+    "github.com/mattn/go-sqlite3": "laster"
+  },
+  "services": {
+    "db": {
+      "ping": true,
+      "dbType": "sqlite3",
+      "database": "/project/go/piFinder.dll",
+      "username": "ascs",
+      "password": "ascs.tech"
+    }
+  }
+}
