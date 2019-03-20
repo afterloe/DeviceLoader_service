@@ -6,7 +6,6 @@ import (
 	"../util"
 	"net/http"
 	"strconv"
-	"database/sql"
 )
 
 /**
@@ -45,21 +44,4 @@ func getDevice(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusOK, util.Success(reply))
-}
-
-func getPoint(context *gin.Context) {
-	key := context.Param("key")
-	val, err := strconv.ParseInt(key, 10, 64)
-	if nil != err {
-		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
-		return
-	}
-	one, err := dbConnect.WithQuery("SELECT ", func(rows *sql.Rows) (interface{}, error) {
-		return nil, nil
-	}, val, true)
-	if nil != err {
-		context.JSON(http.StatusInternalServerError, util.Error(err))
-		return
-	}
-	context.JSON(http.StatusOK, util.Success(one))
 }
