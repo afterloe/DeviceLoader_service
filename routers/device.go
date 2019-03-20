@@ -158,6 +158,52 @@ func modifyDevice(context *gin.Context) {
 	context.JSON(http.StatusOK, util.Success(d))
 }
 
+/**
+	删除设备
+*/
+func delDevice(context *gin.Context) {
+	key := context.Param("key")
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	dbStr := dbConnect.Select("device").
+		Fields("id", "name", "remark", "status", "uid", "ssid", "pwd", "position", "createTime", "modifyTime").
+		AND("id = ?").Preview()
+	one, _:= dbConnect.WithQuery(dbStr, func(rows *sql.Rows) (interface{}, error) {
+		target := new(device)
+		flag := new(int64)
+		rows.Next()
+		rows.Scan(&target.Id, &target.Name, &target.Remark, &flag, &target.Uid, &target.Ssid, &target.Pwd, &target.Position, &target.CreateTime, &target.ModifyTime)
+		if 1 == *flag {
+			target.Status = true
+		}
+		return target, nil
+	}, val)
+	d := one.(*device)
+	if 0 == d.Id {
+		context.JSON(http.StatusBadRequest, util.Fail(404, "没有该设备"))
+		return
+	}
+	if false == d.Status {
+		context.JSON(http.StatusBadRequest, util.Fail(400, "该设备已被删除"))
+		return
+	}
+	d.Status = false
+	d.ModifyTime = time.Now().Unix()
+	dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
+		stmt, err := tx.Prepare("UPDATE device SET uid = ?, ssid = ?, pwd = ?, name = ?, remark = ?, position = ?, status = ? WHEN id = ?")
+		if nil != err {
+			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+		}
+		stmt.Exec(d.Uid, d.Ssid, d.Pwd, d.Name, d.Remark, d.Position, d.Status, d.Id)
+		logger.Logger("warehouse", "update success")
+		return nil, nil
+	})
+	context.JSON(http.StatusOK, util.Success("删除成功"))
+}
+
 type device struct {
 	Id int64 `json:"id"`
 	Uid string `json:"uid"`
