@@ -54,7 +54,7 @@ func getDevice(context *gin.Context) {
 /**
 	创建设备
  */
-func newDevice(context gin.Context) {
+func newDevice(context *gin.Context) {
 	d := &device{
 		Status: true,
 		CreateTime: time.Now().Unix(),
@@ -85,6 +85,76 @@ func newDevice(context gin.Context) {
 		context.JSON(http.StatusBadRequest, util.Error(err))
 		return
 	}
+	context.JSON(http.StatusOK, util.Success(d))
+}
+
+/**
+	修改设备
+*/
+func modifyDevice(context *gin.Context) {
+	key := context.Param("key")
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	dbStr := dbConnect.Select("device").
+		Fields("id", "name", "remark", "status", "uid", "ssid", "pwd", "position", "createTime", "modifyTime").
+		AND("id = ?").Preview()
+	one, _:= dbConnect.WithQuery(dbStr, func(rows *sql.Rows) (interface{}, error) {
+		target := new(device)
+		flag := new(int64)
+		rows.Next()
+		rows.Scan(&target.Id, &target.Name, &target.Remark, &flag, &target.Uid, &target.Ssid, &target.Pwd, &target.Position, &target.CreateTime, &target.ModifyTime)
+		if 1 == *flag {
+			target.Status = true
+		}
+		return target, nil
+	}, val)
+	d := one.(*device)
+	if 0 == d.Id {
+		context.JSON(http.StatusBadRequest, util.Fail(404, "没有该设备"))
+		return
+	}
+	flag := false
+	if "" != context.PostForm("uid") {
+		d.Uid = context.PostForm("uid")
+		flag = true
+	}
+	if "" != context.PostForm("ssid") {
+		d.Ssid = context.PostForm("ssid")
+		flag = true
+	}
+	if "" != context.PostForm("pwd") {
+		d.Pwd = context.PostForm("pwd")
+		flag = true
+	}
+	if "" != context.PostForm("name") {
+		d.Name = context.PostForm("name")
+		flag = true
+	}
+	if "" != context.PostForm("remark") {
+		d.Remark = context.PostForm("remark")
+		flag = true
+	}
+	if "" != context.PostForm("position") {
+		d.Position = context.PostForm("position")
+		flag = true
+	}
+	if !flag {
+		context.JSON(http.StatusBadRequest, util.Fail(400, "没有任何修改"))
+		return
+	}
+	d.ModifyTime = time.Now().Unix()
+	dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
+		stmt, err := tx.Prepare("UPDATE device SET uid = ?, ssid = ?, pwd = ?, name = ?, remark = ?, position = ?, status = ? WHEN id = ?")
+		if nil != err {
+			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+		}
+		stmt.Exec(d.Uid, d.Ssid, d.Pwd, d.Name, d.Remark, d.Position, d.Status, d.Id)
+		logger.Logger("warehouse", "update success")
+		return nil, nil
+	})
 	context.JSON(http.StatusOK, util.Success(d))
 }
 

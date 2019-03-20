@@ -15,7 +15,7 @@ func Execute(route *gin.RouterGroup) {
 	route.GET("/list", getList) // 获取设备列表
 	route.GET("/device/:id", getDevice) // 获取设备详情
 	route.GET("warehouse/:id", getPoint) // 获取数据入口
-	route.POST("/device") // 修改设备
+	route.POST("/device", modifyDevice) // 修改设备
 	route.PUT("/device", newDevice) // 创建设备
 	route.DELETE("/device/:id") // 删除设备
 	route.PUT("/warehouse") // 给设备添加数据源
