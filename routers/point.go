@@ -76,7 +76,7 @@ func newPoint(context *gin.Context) {
 	删除数据源
 */
 func deletePoint(context *gin.Context) {
-	key := context.PostForm("id")
+	key := context.Param("key")
 	val, err := strconv.ParseInt(key, 10, 64)
 	if nil != err {
 		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
