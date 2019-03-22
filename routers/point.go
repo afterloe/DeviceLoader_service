@@ -55,7 +55,7 @@ func newPoint(context *gin.Context) {
 		return
 	}
 	_, err = dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
-		stmt, err := tx.Prepare("INSERT INTTO warehouse(device_id, host, url, remarks, status, createTime) VALUES (?,?,?,?,?,?)")
+		stmt, err := tx.Prepare("INSERT INTO warehouse(device_id, host, url, remarks, status, createTime) VALUES (?,?,?,?,?,?)")
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
@@ -76,7 +76,7 @@ func newPoint(context *gin.Context) {
 	删除数据源
 */
 func deletePoint(context *gin.Context) {
-	key := context.PostForm("id")
+	key := context.Param("key")
 	val, err := strconv.ParseInt(key, 10, 64)
 	if nil != err {
 		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
@@ -94,6 +94,7 @@ func deletePoint(context *gin.Context) {
 		if 0 == count {
 			return nil, &exceptions.Error{Msg: "no such this point", Code: 404}
 		}
+		c.Close()
 		stmt, err = tx.Prepare("UPDATE warehouse SET status = ? WHERE id = ?")
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
@@ -116,7 +117,7 @@ func deletePoint(context *gin.Context) {
 	修改数据源
 */
 func modifyPoint(context *gin.Context) {
-	key := context.PostForm("id")
+	key := context.PostForm("key")
 	val, err := strconv.ParseInt(key, 10, 64)
 	if nil != err {
 		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
@@ -131,6 +132,7 @@ func modifyPoint(context *gin.Context) {
 		c.Next()
 		p := new(point)
 		c.Scan(&p.DeviceId, &p.Host, &p.Url, &p.Remarks, &p.LastSync)
+		c.Close()
 		if 0 == p.DeviceId {
 			return nil, &exceptions.Error{Msg: "no such this point", Code: 404}
 		}
@@ -148,7 +150,7 @@ func modifyPoint(context *gin.Context) {
 			flag = true
 		}
 		if false == flag {
-			return nil, &exceptions.Error{Msg: "no change", Code: 400}
+			return nil, &exceptions.Error{Msg: "没有任何修改", Code: 400}
 		}
 		p.ModifyTime = time.Now().Unix()
 		stmt, err = tx.Prepare("UPDATE warehouse SET host = ?, url = ?, remarks = ?, modifyTime = ? WHERE id = ?")
@@ -166,7 +168,7 @@ func modifyPoint(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, util.Error(err))
 		return
 	}
-	context.JSON(http.StatusOK, util.Success("delete success."))
+	context.JSON(http.StatusOK, util.Success("update success."))
 }
 
 type point struct {
