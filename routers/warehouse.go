@@ -101,7 +101,7 @@ func deletePoint(context *gin.Context) {
 		result, _ := stmt.Exec(false, val)
 		flag, _ := result.RowsAffected()
 		if 0 == flag {
-			return nil, &exceptions.Error{Msg: "delete fail", Code: 404}
+			return nil, &exceptions.Error{Msg: "delete fail", Code: 400}
 		}
 		return nil, nil
 	})
@@ -123,25 +123,42 @@ func modifyPoint(context *gin.Context) {
 		return
 	}
 	_, err = dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
-		stmt, err := tx.Prepare("SELECT COUNT(1) FROM warehouse WHERE id = ?")
+		stmt, err := tx.Prepare("SELECT device_id, host, url, remarks, lastSync FROM warehouse WHERE id = ?")
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
 		c, _ := stmt.Query(val)
 		c.Next()
-		var count int64
-		c.Scan(&count)
-		if 0 == count {
+		p := new(point)
+		c.Scan(&p.DeviceId, &p.Host, &p.Url, &p.Remarks, &p.LastSync)
+		if 0 == p.DeviceId {
 			return nil, &exceptions.Error{Msg: "no such this point", Code: 404}
 		}
-		stmt, err = tx.Prepare("UPDATE warehouse SET status = ? WHERE id = ?")
+		flag := false
+		if "" != context.PostForm("host") {
+			p.Host = context.PostForm("host")
+			flag = true
+		}
+		if "" != context.PostForm("url") {
+			p.Url = context.PostForm("url")
+			flag = true
+		}
+		if "" != context.PostForm("remarks") {
+			p.Remarks = context.PostForm("remarks")
+			flag = true
+		}
+		if false == flag {
+			return nil, &exceptions.Error{Msg: "no change", Code: 400}
+		}
+		p.ModifyTime = time.Now().Unix()
+		stmt, err = tx.Prepare("UPDATE warehouse SET host = ?, url = ?, remarks = ?, modifyTime = ? WHERE id = ?")
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		result, _ := stmt.Exec(false, val)
-		flag, _ := result.RowsAffected()
-		if 0 == flag {
-			return nil, &exceptions.Error{Msg: "delete fail", Code: 404}
+		result, _ := stmt.Exec(p.Host, p.Url, p.Remarks, p.ModifyTime, val)
+		rows, _ := result.RowsAffected()
+		if 0 == rows {
+			return nil, &exceptions.Error{Msg: "update fail", Code: 400}
 		}
 		return nil, nil
 	})
@@ -163,7 +180,6 @@ type point struct {
 	ModifyTime int64 `json:"modifyTime"`
 	LastSync int64 `json:"lastSync"`
 }
-
 
 /**
 	参数检测

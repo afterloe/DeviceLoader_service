@@ -147,11 +147,11 @@ func modifyDevice(context *gin.Context) {
 	}
 	d.ModifyTime = time.Now().Unix()
 	dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
-		stmt, err := tx.Prepare("UPDATE device SET uid = ?, ssid = ?, pwd = ?, name = ?, remark = ?, position = ?, status = ? WHEN id = ?")
+		stmt, err := tx.Prepare("UPDATE device SET uid = ?, ssid = ?, pwd = ?, name = ?, remark = ?, position = ?, status = ?, modifyTime = ? WHEN id = ?")
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		stmt.Exec(d.Uid, d.Ssid, d.Pwd, d.Name, d.Remark, d.Position, d.Status, d.Id)
+		stmt.Exec(d.Uid, d.Ssid, d.Pwd, d.Name, d.Remark, d.Position, d.Status, d.Id, d.ModifyTime)
 		logger.Logger("warehouse", "update success")
 		return nil, nil
 	})
