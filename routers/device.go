@@ -207,15 +207,27 @@ func delDevice(context *gin.Context) {
 	}
 	d.Status = false
 	d.ModifyTime = time.Now().Unix()
-	dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
-		stmt, err := tx.Prepare("UPDATE device SET uid = ?, ssid = ?, pwd = ?, name = ?, remark = ?, position = ?, status = ? WHEN id = ?")
+	_, err = dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
+		stmt, err := tx.Prepare("UPDATE device SET uid = ?, ssid = ?, pwd = ?, name = ?, remark = ?, position = ?, status = ?, modifyTime = ? WHERE id = ?")
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		stmt.Exec(d.Uid, d.Ssid, d.Pwd, d.Name, d.Remark, d.Position, d.Status, d.Id)
-		logger.Logger("warehouse", "update success")
+		result, err := stmt.Exec(d.Uid, d.Ssid, d.Pwd, d.Name, d.Remark, d.Position, d.Status, d.ModifyTime, d.Id)
+		if nil != err {
+			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+		}
+		rows, _ := result.RowsAffected()
+		if 0 == rows {
+			return nil, &exceptions.Error{Msg: "UPDATE FAILED.", Code: 500}
+		}
+		logger.Logger("device", fmt.Sprintf("rows -> %d", rows))
+		logger.Logger("device", "update success")
 		return nil, nil
 	})
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Error(err))
+		return
+	}
 	context.JSON(http.StatusOK, util.Success("删除成功"))
 }
 
