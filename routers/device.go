@@ -169,7 +169,7 @@ func modifyDevice(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, util.Error(err))
 		return
 	}
-	context.JSON(http.StatusOK, util.Success(d))
+	context.JSON(http.StatusOK, util.Success("update success"))
 }
 
 /**

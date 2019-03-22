@@ -117,7 +117,7 @@ func deletePoint(context *gin.Context) {
 	修改数据源
 */
 func modifyPoint(context *gin.Context) {
-	key := context.PostForm("id")
+	key := context.PostForm("key")
 	val, err := strconv.ParseInt(key, 10, 64)
 	if nil != err {
 		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
@@ -150,7 +150,7 @@ func modifyPoint(context *gin.Context) {
 			flag = true
 		}
 		if false == flag {
-			return nil, &exceptions.Error{Msg: "no change", Code: 400}
+			return nil, &exceptions.Error{Msg: "没有任何修改", Code: 400}
 		}
 		p.ModifyTime = time.Now().Unix()
 		stmt, err = tx.Prepare("UPDATE warehouse SET host = ?, url = ?, remarks = ?, modifyTime = ? WHERE id = ?")
@@ -168,7 +168,7 @@ func modifyPoint(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, util.Error(err))
 		return
 	}
-	context.JSON(http.StatusOK, util.Success("delete success."))
+	context.JSON(http.StatusOK, util.Success("update success."))
 }
 
 type point struct {
