@@ -55,7 +55,7 @@ func newPoint(context *gin.Context) {
 		return
 	}
 	_, err = dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
-		stmt, err := tx.Prepare("INSERT INTTO warehouse(device_id, host, url, remarks, status, createTime) VALUES (?,?,?,?,?,?)")
+		stmt, err := tx.Prepare("INSERT INTO warehouse(device_id, host, url, remarks, status, createTime) VALUES (?,?,?,?,?,?)")
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
