@@ -49,7 +49,7 @@ func getDevice(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, util.Error(err))
 		return
 	}
-	context.JSON(http.StatusOK, util.Success(reply))
+	context.JSON(http.StatusOK, util.Success(reply[0]))
 }
 
 /**
@@ -110,6 +110,7 @@ func modifyDevice(context *gin.Context) {
 		if 1 == *flag {
 			target.Status = true
 		}
+		rows.Close()
 		return target, nil
 	}, val)
 	d := one.(*device)
@@ -192,6 +193,7 @@ func delDevice(context *gin.Context) {
 		if 1 == *flag {
 			target.Status = true
 		}
+		rows.Close()
 		return target, nil
 	}, val)
 	d := one.(*device)

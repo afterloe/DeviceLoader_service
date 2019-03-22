@@ -94,6 +94,7 @@ func deletePoint(context *gin.Context) {
 		if 0 == count {
 			return nil, &exceptions.Error{Msg: "no such this point", Code: 404}
 		}
+		c.Close()
 		stmt, err = tx.Prepare("UPDATE warehouse SET status = ? WHERE id = ?")
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
@@ -131,6 +132,7 @@ func modifyPoint(context *gin.Context) {
 		c.Next()
 		p := new(point)
 		c.Scan(&p.DeviceId, &p.Host, &p.Url, &p.Remarks, &p.LastSync)
+		c.Close()
 		if 0 == p.DeviceId {
 			return nil, &exceptions.Error{Msg: "no such this point", Code: 404}
 		}
