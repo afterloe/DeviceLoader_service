@@ -6,6 +6,11 @@ import (
 	"net/http"
 	"../util"
 	"../dbConnect"
+	"reflect"
+	"../exceptions"
+	"time"
+	"database/sql"
+	"../integrate/logger"
 )
 
 /**
@@ -28,4 +33,72 @@ func getPoint(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusOK, util.Success(reply))
+}
+
+/**
+	添加数据入口
+*/
+func newPoint(context *gin.Context) {
+	key := context.PostForm("id")
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}	
+	p := &point{DeviceId: val, CreateTime: time.Now().Unix(), Status: true}
+	p.Host = context.PostForm("host")
+	p.Url = context.PostForm("url")
+	p.Remarks = context.PostForm("remarks")
+	err = p.Check("Host", "Url") // 参数检测
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Error(err))
+		return
+	}
+	_, err = dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
+		stmt, err := tx.Prepare("INSERT INTTO warehouse(device_id, host, url, remarks, status, createTime) VALUES (?,?,?,?,?,?)")
+		if nil != err {
+			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+		}
+		result, _ := stmt.Exec(p.DeviceId, p.Host, p.Url, p.Remarks, p.Status, p.CreateTime)
+		id, _ := result.LastInsertId()
+		p.Id = id
+		logger.Logger("device", "insert success")
+		return nil, nil
+	})
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Error(err))
+		return
+	}
+	context.JSON(http.StatusOK, util.Success(p))
+
+}
+
+type point struct {
+	DeviceId int64 `json:"deviceId"`
+	Host string `json:"host"`
+	Url string `json:"url"`
+	Remarks string `json:"remarks"`
+	Id int64 `json:"id"`
+	Status bool `json:"status"`
+	CreateTime int64 `json:"createTime"`
+	ModifyTime int64 `json:"modifyTime"`
+	LastSync int64 `json:"lastSync"`
+}
+
+
+/**
+	参数检测
+*/
+func (this *point) Check(args ...string) error {
+	value := reflect.ValueOf(*this)
+	for _, arg := range args {
+		v := value.FieldByName(arg)
+		if !v.IsValid() {
+			break
+		}
+		if "" == v.Interface() {
+			return &exceptions.Error{Msg: "lack param " + arg, Code: 400}
+		}
+	}
+	return nil
 }

@@ -14,11 +14,11 @@ import (
 func Execute(route *gin.RouterGroup) {
 	route.GET("/list", getList) // 获取设备列表
 	route.GET("/device/:id", getDevice) // 获取设备详情
-	route.GET("warehouse/:id", getPoint) // 获取数据入口
 	route.POST("/device", modifyDevice) // 修改设备
 	route.PUT("/device", newDevice) // 创建设备
 	route.DELETE("/device/:id", delDevice) // 删除设备
-	route.PUT("/warehouse") // 给设备添加数据源
+	route.GET("/warehouse/:id", getPoint) // 获取数据入口
+	route.PUT("/warehouse", newPoint) // 给设备添加数据源
 	route.DELETE("/warehouse/:id") // 给设备删除数据源
 	route.POST("/warehouse/:id") // 修改设备数据源
 }
