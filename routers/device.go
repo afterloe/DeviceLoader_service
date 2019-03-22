@@ -92,7 +92,7 @@ func newDevice(context *gin.Context) {
 	修改设备
 */
 func modifyDevice(context *gin.Context) {
-	key := context.Param("key")
+	key := context.PostForm("key")
 	val, err := strconv.ParseInt(key, 10, 64)
 	if nil != err {
 		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
