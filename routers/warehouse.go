@@ -112,6 +112,46 @@ func deletePoint(context *gin.Context) {
 	context.JSON(http.StatusOK, util.Success("delete success."))
 }
 
+/**
+	修改数据源
+*/
+func modifyPoint(context *gin.Context) {
+	key := context.PostForm("id")
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	_, err = dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
+		stmt, err := tx.Prepare("SELECT COUNT(1) FROM warehouse WHERE id = ?")
+		if nil != err {
+			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+		}
+		c, _ := stmt.Query(val)
+		c.Next()
+		var count int64
+		c.Scan(&count)
+		if 0 == count {
+			return nil, &exceptions.Error{Msg: "no such this point", Code: 404}
+		}
+		stmt, err = tx.Prepare("UPDATE warehouse SET status = ? WHERE id = ?")
+		if nil != err {
+			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+		}
+		result, _ := stmt.Exec(false, val)
+		flag, _ := result.RowsAffected()
+		if 0 == flag {
+			return nil, &exceptions.Error{Msg: "delete fail", Code: 404}
+		}
+		return nil, nil
+	})
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Error(err))
+		return
+	}
+	context.JSON(http.StatusOK, util.Success("delete success."))
+}
+
 type point struct {
 	DeviceId int64 `json:"deviceId"`
 	Host string `json:"host"`

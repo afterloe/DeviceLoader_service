@@ -20,7 +20,7 @@ func Execute(route *gin.RouterGroup) {
 	route.GET("/warehouse/:id", getPoint) // 获取数据入口
 	route.PUT("/warehouse", newPoint) // 给设备添加数据源
 	route.DELETE("/warehouse/:id", deletePoint) // 给设备删除数据源
-	route.POST("/warehouse/:id") // 修改设备数据源
+	route.POST("/warehouse/:id", modifyPoint) // 修改设备数据源
 }
 
 /**
