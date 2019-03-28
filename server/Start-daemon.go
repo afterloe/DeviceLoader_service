@@ -53,5 +53,5 @@ func initDaemonService(engine *gin.Engine, cfg interface{}) {
 }
 
 func infoEntryPoint(cxt *gin.Engine) {
-	cxt.GET("/info", routers.Info)
+	cxt.GET("/info", v1.Info)
 }
