@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"../integrate/logger"
 	"../integrate/notSupper"
-	"../routers"
+	v1 "../routers/v1"
+	v2 "../routers/v2"
 	"os"
 )
 
@@ -46,7 +47,8 @@ func initDaemonService(engine *gin.Engine, cfg interface{}) {
 	engine.NoMethod(notSupper.NotSupper(&notSupperStr))
 	engine.MaxMultipartMemory = 120 << 20 // 最大上传文件为120 mb
 	infoEntryPoint(engine)
-	routers.Execute(engine.Group("/v1"))
+	v1.Execute(engine.Group("/v1"))
+	v2.Execute(engine.Group("/v2"))
 	logger.Info("daemon", "daemon service is ready ...")
 }
 

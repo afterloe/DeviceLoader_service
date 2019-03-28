@@ -2,15 +2,15 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
-	"../dbConnect"
-	"../util"
+	"../../dbConnect"
+	"../../util"
 	"net/http"
 	"strconv"
 	"time"
 	"reflect"
-	"../exceptions"
+	"../../exceptions"
 	"database/sql"
-	"../integrate/logger"
+	"../../integrate/logger"
 	"fmt"
 )
 

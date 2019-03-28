@@ -4,13 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"net/http"
-	"../util"
-	"../dbConnect"
+	"../../util"
+	"../../dbConnect"
 	"reflect"
-	"../exceptions"
+	"../../exceptions"
 	"time"
 	"database/sql"
-	"../integrate/logger"
+	"../../integrate/logger"
 )
 
 /**

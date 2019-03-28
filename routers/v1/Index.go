@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"net/http"
-	"../util"
-	"../config"
+	"../../util"
+	"../../config"
 )
 
 /**
