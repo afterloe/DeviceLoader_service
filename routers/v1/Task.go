@@ -67,7 +67,8 @@ func makeTask(context *gin.Context) {
  */
 func getTaskList(context *gin.Context) {
 	key := context.Query("key")
-	if 32 != len(key) {
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
 		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
@@ -76,7 +77,7 @@ func getTaskList(context *gin.Context) {
 		JOIN("task_device_link").
 		ON("task_device_link.deviceId = device.id").
 		WHERE("task_device_link.id = ?").
-		Query(true, key)
+		Query(true, val)
 	if nil != err {
 		context.JSON(http.StatusInternalServerError, util.Error(err))
 		return
