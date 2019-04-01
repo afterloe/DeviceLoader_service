@@ -21,6 +21,10 @@ func Execute(route *gin.RouterGroup) {
 	route.PUT("/point", newPoint) // 给设备添加数据源
 	route.DELETE("/point/:key", deletePoint) // 给设备删除数据源
 	route.POST("/point", modifyPoint) // 修改设备数据源
+	route.GET("/task/list", getTaskList) // 我的巡检任务
+	route.PUT("/task", newTask) // 创建任务
+	route.POST("/task", modifyTask) // 修改任务
+	//route.DELETE("/task", delTask) // 删除任务
 }
 
 /**

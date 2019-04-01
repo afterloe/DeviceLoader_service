@@ -34,6 +34,8 @@ type sqlStr struct {
 	fields []string
 	andConditions []string
 	pageCondition string
+	joinTable string
+	joinCondition []string
 }
 
 func Select(tableName string) *sqlStr {
@@ -48,6 +50,24 @@ func (this *sqlStr) Fields(fields ...string) *sqlStr {
 	return this
 }
 
+func (this *sqlStr) JOIN(tableName string) *sqlStr {
+	this.joinTable = tableName
+	return this
+}
+
+func (this *sqlStr) ON(condition ...string) *sqlStr {
+	this.joinCondition = condition
+	return this
+}
+
+func (this *sqlStr) WHERE(conditions ...string) *sqlStr {
+	this.andConditions = conditions
+	return this
+}
+
+/**
+* 即将废弃
+*/
 func (this *sqlStr) AND(conditions ...string) *sqlStr {
 	this.andConditions = conditions
 	return this
@@ -65,6 +85,9 @@ func (this *sqlStr) OrderBy(str string) *sqlStr {
 
 func (this *sqlStr) Preview() string {
 	baseSQL := fmt.Sprintf("%s %s FROM %s", this.sqlType, strings.Join(this.fields, ", "), this.tableName)
+	if "" != this.joinTable {
+		baseSQL = fmt.Sprintf("%s JOIN %s ON %s", baseSQL, this.joinTable, strings.Join(this.joinCondition, " AND "))
+	}
 	if 0 != len(this.andConditions) {
 		baseSQL = fmt.Sprintf("%s WHERE %s", baseSQL, strings.Join(this.andConditions, " AND "))
 	}
