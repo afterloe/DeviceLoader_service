@@ -13,7 +13,7 @@ import (
 func getList(context *gin.Context)  {
 	begin, limit:=pageCondition(context)
 	reply, err := dbConnect.Select("device").
-		Fields("id", "name", "position").
+		Fields("id", "name", "position", "ssid").
 		AND("status = ?").
 		Page(begin, limit).
 		Query(true)
