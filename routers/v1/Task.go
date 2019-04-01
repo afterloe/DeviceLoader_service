@@ -12,10 +12,76 @@ import (
 	"time"
 )
 
+func modifyTask(context *gin.Context) {
+	key := context.PostForm("key")
+	deviceIdsStr := context.PostForm("deviceIds")
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	if "" != deviceIdsStr {
+		var ids = make([]int64, 0)
+		strs := strings.Split(deviceIdsStr, ",")
+		for _, str := range strs {
+			val, err := strconv.ParseInt(str, 10, 64)
+			if nil != err {
+				context.JSON(http.StatusBadRequest, util.Success("参数类型错误"))
+				return
+			}
+			ids = append(ids, val)
+		}
+		_, err = dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
+			stmt, err := tx.Prepare("DELETE FROM task_device_link WHERE id = ?")
+			if nil != err {
+				tx.Rollback()
+				return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+			}
+			stmt.Exec(val)
+			stmt.Close()
+			stmt, err = tx.Prepare("INSERT INTO task_device_link(id, deviceId) VALUES(?, ?)")
+			if nil != err {
+				tx.Rollback()
+				return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+			}
+			for _, id := range ids {
+				r, _ := stmt.Exec(val, id)
+				row, _ := r.RowsAffected()
+				if 0 == row {
+					tx.Rollback()
+					return nil, &exceptions.Error{Msg: "tasks insert fail.", Code: 500}
+				}
+			}
+			return nil, nil
+		})
+	}
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Error(err))
+		return
+	}
+	_, err = dbConnect.WithPrepare("UPDATE task SET remark = ? WHERE id = ?", func(stmt *sql.Stmt) (interface{}, error) {
+		result, err := stmt.Exec(context.PostForm("remark"), val)
+		if nil != err {
+			return nil, &exceptions.Error{Msg: "db update failed.", Code: 500}
+		}
+		row, _ := result.RowsAffected()
+		if 0 == row {
+			return nil, &exceptions.Error{Msg: "tasks update fail.", Code: 500}
+		}
+		return nil, nil
+	})
+
+	if nil != err {
+		context.JSON(http.StatusBadRequest, util.Error(err))
+		return
+	}
+	context.JSON(http.StatusOK, util.Success("done"))
+}
+
 /**
 * 创建任务
 */
-func makeTask(context *gin.Context) {
+func newTask(context *gin.Context) {
 	deviceIdsStr := context.PostForm("deviceIds")
 	remark := context.PostForm("remark")
 	if "" == deviceIdsStr {
