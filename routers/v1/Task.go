@@ -72,8 +72,10 @@ func getTaskList(context *gin.Context) {
 		return
 	}
 	reply, err := dbConnect.Select("device").
-		Fields("id", "name", "remark", "ssid", "pwd").
-		AND("status = ?", "task = ?").
+		Fields("device.id", "device.name", "device.remark", "device.ssid", "device.pwd").
+		JOIN("task_device_link").
+		ON("task_device_link.deviceId = device.id").
+		WHERE("task_device_link.id = ?").
 		Query(true, key)
 	if nil != err {
 		context.JSON(http.StatusInternalServerError, util.Error(err))
