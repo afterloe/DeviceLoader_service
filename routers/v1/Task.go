@@ -12,6 +12,9 @@ import (
 	"time"
 )
 
+/*
+	修改任务
+**/
 func modifyTask(context *gin.Context) {
 	key := context.PostForm("key")
 	deviceIdsStr := context.PostForm("deviceIds")
@@ -143,7 +146,7 @@ func getTaskList(context *gin.Context) {
 		JOIN("task_device_link").
 		ON("task_device_link.deviceId = device.id").
 		WHERE("task_device_link.id = ?").
-		Query(true, val)
+		Query(val)
 	if nil != err {
 		context.JSON(http.StatusInternalServerError, util.Error(err))
 		return
